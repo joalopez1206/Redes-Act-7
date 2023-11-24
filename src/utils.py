@@ -18,6 +18,9 @@ class Packet:
 # key: la
 cache = dict()
 
+def is_complete(packet: Packet):
+    return packet.offset == 0 and packet.flag==0
+
 def batched(iterable, n):
     # batched('ABCDEFG', 3) --> ABC DEF G
     if n < 1:
@@ -77,7 +80,7 @@ def check_routes(routes_file_name: str, dest_addr: tuple[str,int], is_default_ro
 
         # Si es posible llegar a ellos
         if len(lines_filtered) != 0:
-            print(cache)
+            #print(cache)
 
             #vemos que para llegar, tomo la llave, obtengo la linea donde estoy actualmente y obtengo la ip 
             # y el puerto para llegar
@@ -87,34 +90,13 @@ def check_routes(routes_file_name: str, dest_addr: tuple[str,int], is_default_ro
             cache[dest_addr] +=1
 
             #retorno la direccion
-            return ip_para_llegar, int(puerto_para_llegar), mtu
+            return ip_para_llegar, int(puerto_para_llegar), int(mtu)
         
         
         
         # si no, soy el default y no encontre nada y por lo tanto tiro none
         return None
-
-
-def fragment_IP_packet(IP_packet: bytes, MTU: int) -> list[bytes]:
-    l = len(IP_packet)
-
-    if l <= MTU:
-        return [IP_packet]
-    else:
-        new_size = MTU - HEADER_SIZE 
-        parsed_packet = parse_packet(IP_packet)
-        offset = parsed_packet.offset
-        retlist = []
-        for i, new_msg in enumerate(batched(parsed_packet.msg.decode(), new_size)):
-            new_msg = ''.join(new_msg)
-            new_msg = new_msg.encode()
-            size = len(new_msg)
-            new_offset = offset+ i*new_size
-            p =Packet(parsed_packet.ip, parsed_packet.port, parsed_packet.ttl, parsed_packet.iden, new_offset, size, 1, new_msg)
-            create_packet(p)
-            retlist.append(create_packet(p))
-        return retlist
-    
+ 
 def fragment_IP_packet(IP_packet: bytes, MTU: int) -> list[bytes]:
     l = len(IP_packet)
 

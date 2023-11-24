@@ -1,7 +1,8 @@
 import sys
 import socket
-from utils import parse_packet, check_routes, create_packet, get_address, Packet, fragment_IP_packet
-
+from utils import parse_packet, check_routes, create_packet, get_address, Packet, fragment_IP_packet, reassemble_IP_packet, is_complete
+import pprint
+pprint = pprint.PrettyPrinter()
 if len(sys.argv) != 4:
     print("Usage: python3 router.py <ip> <port> <table>")
     exit(0)
@@ -21,13 +22,14 @@ if "default" in TABLE_FILE:
 router_sock: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 router_sock.bind(ADDRESS)
 
+cache_msgs = {}
 
 if __name__ == "__main__":
     print(f"Starting router! {ip}@{port}")
     while True:
         msg, addr = router_sock.recvfrom(1024)
         # para quitar el \n
-        msg = msg.strip()
+        msg = msg.strip(b"\n")
         recv_packet = parse_packet(msg)
         recv_address = get_address(recv_packet)
         if recv_packet.ttl<=0:
@@ -35,7 +37,16 @@ if __name__ == "__main__":
             continue
 
         if recv_address == ADDRESS:
-            print(recv_packet.msg.decode())
+            if cache_msgs.get(recv_packet.iden) == None:
+                cache_msgs[recv_packet.iden] = []
+            
+            cache_msgs[recv_packet.iden] += [msg]
+            bytes_or_none = reassemble_IP_packet(cache_msgs[recv_packet.iden])
+            pprint.pprint(cache_msgs)
+            if bytes_or_none != None:
+                parsed = parse_packet(bytes_or_none)
+                if is_complete(parsed):
+                    print(parsed.msg)
             continue
             
         *next_hop_address, next_hop_mtu = check_routes(TABLE_FILE, recv_address, is_default_router=default)
