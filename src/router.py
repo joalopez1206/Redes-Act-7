@@ -1,6 +1,6 @@
 import sys
 import socket
-from utils import parse_packet, check_routes, create_packet, get_address, Packet
+from utils import parse_packet, check_routes, create_packet, get_address, Packet, fragment_IP_packet
 
 if len(sys.argv) != 4:
     print("Usage: python3 router.py <ip> <port> <table>")
@@ -38,15 +38,20 @@ if __name__ == "__main__":
             print(recv_packet.msg.decode())
             continue
             
-        next_hop_address = check_routes(TABLE_FILE, recv_address, is_default_router=default)
-        
+        *next_hop_address, next_hop_mtu = check_routes(TABLE_FILE, recv_address, is_default_router=default)
+        next_hop_address = tuple(next_hop_address)
+
         if next_hop_address is None:
             print(f"No hay rutas hacia {recv_packet.ip} para paquete {recv_packet.port}")
             continue
-        msg = create_packet(Packet(recv_packet.ip, recv_packet.port, recv_packet.ttl-1, recv_packet.msg))
-        print()
-        print("-"*30)    
-        print(f"redirigiendo paquete {msg} con destino final {recv_address} desde {ADDRESS} hacia {next_hop_address}")
-        print("-"*30) 
-        print()
-        router_sock.sendto(msg ,next_hop_address)
+
+        for fragment in fragment_IP_packet(msg, next_hop_mtu):
+            parsed_msg = parse_packet(fragment)
+            parsed_msg.ttl -= 1
+            print()
+            print("-"*30)    
+            print(f"redirigiendo paquete {msg} con destino final {recv_address} desde {ADDRESS} hacia {next_hop_address}")
+            print("-"*30) 
+            print()
+            msg = create_packet(parsed_msg)
+            router_sock.sendto(msg ,next_hop_address)
