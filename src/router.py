@@ -42,7 +42,7 @@ if __name__ == "__main__":
             
             cache_msgs[recv_packet.iden] += [msg]
             bytes_or_none = reassemble_IP_packet(cache_msgs[recv_packet.iden])
-            pprint.pprint(cache_msgs)
+            #pprint.pprint(cache_msgs)
             if bytes_or_none != None:
                 parsed = parse_packet(bytes_or_none)
                 if is_complete(parsed):

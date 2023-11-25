@@ -117,9 +117,10 @@ def fragment_IP_packet(IP_packet: bytes, MTU: int) -> list[bytes]:
 def reassemble_IP_packet(fragment_list: list[bytes]) -> bytes:
     if len(fragment_list) == 1:
         fragment = parse_packet(fragment_list[0])
-        if fragment.flag == 1:
+        if is_complete(fragment):
             return fragment_list[0]
         else: return None
+    
     fragment_parsed_list = [parse_packet(fragment) for fragment in fragment_list]
     fragment_parsed_list = sorted(fragment_parsed_list, key=lambda x: x.offset)
     for i in range(len(fragment_parsed_list)-1):
