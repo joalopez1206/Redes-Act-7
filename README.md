@@ -10,6 +10,9 @@ En la carpeta [src](./src) esta todo el codigo, el cual se divide en
 - [test.py](./src/test.py) -> el cual tiene unos tests para ensamblar y reassamblear los packet
 Los ejemplos usados estan en la carpeta [ejemplos](./src/ejemplos) y en el archivo [tests.txt](./src/tests.txt)
 
+
+### Desiciones de diseño
+
 Como se recomendo, gran parte del codigo esta basado en la actividad pasada, lo que cambia ahora son
 - los headers
 - las funciones de fragmentacion y reensamble
@@ -17,6 +20,22 @@ Como se recomendo, gran parte del codigo esta basado en la actividad pasada, lo 
 
 Pequeñas decisiones de diseño:
 - La funcion `fragment_IP_packet()` es una funcion recursiva, con caso base cuando el largo es `<= MTU`
+- Se modifico la clase `Packet` de la activdad pasada, para contar los nuevos headers.
+
+---
+__Desicion de compatibilidad(LEER!)__: Esto es en retrospectiva, pero decidi que usar netcat usando enter (sin EOF), por lo que "\n" esta 
+prohibido en mensajes, asi que porfavor, usen mensajes sin "\n" dentro del mensaje. (Se que esta mal, pero en la actividad BGP remuevo eso, usando el modulo netcatudp.py).
+
+Si desean, pueden remover la linea
+```python
+msg = msg.strip("\n")
+```
+
+y usar `python3 netcatudp.py ip port`
+
+Disculpa las molestias
+
+---
 
 ## Tests
 
